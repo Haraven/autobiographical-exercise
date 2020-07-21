@@ -195,5 +195,20 @@ namespace Haraven.Autobiographies
 
 			return true;
 		}
+
+		public bool SendAttachmentTo(string recipient, Email email, string attachmentRootPath)
+		{
+			Logger.Log(Constants.Tags.GMAIL, $"Sending attachment to {recipient}");
+
+			if (email == null)
+			{
+				Logger.Log(Constants.Tags.GMAIL, "Attempted to send the attachments of a null e-mail.", LogType.Error);
+				return false;
+			}
+
+			service.Users.Messages.Send()
+
+			Logger.Log(Constants.Tags.GMAIL, $"Sent attachment to {recipient}");
+		}
 	}
 }

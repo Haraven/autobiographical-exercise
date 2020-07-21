@@ -29,7 +29,8 @@ namespace Haraven.Autobiographies.Utils
 			public const string THREADING = "task";
 
 			public const string GMAIL = "gmail-manager";
-			public static string SELF_KNOWLEDGE = "self-knowledge-manager";
+			public const string SELF_KNOWLEDGE = "self-knowledge-manager";
+			public const string USERS = "user-manager";
 		}
 	}
 }

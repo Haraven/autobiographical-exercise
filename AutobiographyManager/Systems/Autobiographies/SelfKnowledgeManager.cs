@@ -134,7 +134,7 @@ namespace Haraven.Autobiographies
 					continue;
 				}
 
-
+				GmailManager.Instance.SendAttachmentTo(recipient, newAutobiography, CurrentFeedbackPath);
 			}
 		}
 
