@@ -20,7 +20,7 @@ namespace Haraven.Autobiographies
 					Constants.GmailApi.CURRENT_USER, Paths.GMAIL_CREDENTIALS_PATH, Paths.GMAIL_TOKEN_PATH, cancellationTokenSource.Token);
 
 				var autobiographyManager =
-					new SelfKnowledgeManager(gmailManager, Paths.AUTOBIOGRAPHIES_PATH, Paths.FEEDBACK_PATH);
+					new SelfKnowledgeManager(Paths.AUTOBIOGRAPHIES_PATH, Paths.FEEDBACK_PATH);
 
 				TaskRepeater.Interval(TimeSpan.FromMinutes(5d), autobiographyManager.ParseAllMails, cancellationTokenSource.Token);
 

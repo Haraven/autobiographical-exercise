@@ -13,6 +13,8 @@ namespace Haraven.Autobiographies
 {
 	public class GmailManager
 	{
+		public static GmailManager Instance { get; private set; }
+
 		public string CredentialPath { get; }
 		public string TokenPath { get; }
 		public string ApplicationName { get; }
@@ -72,6 +74,8 @@ namespace Haraven.Autobiographies
 				HttpClientInitializer = credential,
 				ApplicationName = ApplicationName,
 			});
+
+			Instance = this;
 
 			Logger.Log(Constants.Tags.GMAIL, "Finished initializing.");
 		}
@@ -143,7 +147,8 @@ namespace Haraven.Autobiographies
 				{
 					if (string.IsNullOrEmpty(messagePart.Filename)) continue;
 
-					email.AttachmentFilename = messagePart.Filename;
+					email.AttachmentExtension =
+						messagePart.Filename.Substring(messagePart.Filename.LastIndexOf('.') + 1);
 					email.AttachmentId = messagePart.Body.AttachmentId;
 					email.AreAttachmentsInitialized = true;
 					return true;
@@ -183,7 +188,8 @@ namespace Haraven.Autobiographies
 			var attachmentData = attachmentPart.Data.Replace('-', '+').Replace('_', '/');
 			var data = Convert.FromBase64String(attachmentData);
 
-			var filePath = Path.Combine(path, Guid.NewGuid() + "_" + email.AttachmentFilename);
+			email.AttachmentFileGuid = Guid.NewGuid();
+			var filePath = Path.Combine(path, email.AttachmentFileGuid + "." + email.AttachmentExtension);
 			File.WriteAllBytes(filePath, data);
 			Logger.Log(Constants.Tags.GMAIL, $"Saved attachment at {filePath}");
 

@@ -8,17 +8,27 @@ namespace Haraven.Autobiographies
 {
 	public class SelfKnowledgeManager
 	{
+		public class AutobiographyPairing
+		{
+			public string Sender { get; set; }
+			public string SenderAutobiographyGuid { get; set; }
+			public string Recipient { get; set; }
+			public string RecipientFeedbackGuid { get; set; }
+
+			public bool SentAutobiographyToRecipient { get; set; }
+			public bool SentFeedbackToSender { get; set; }
+		}
+
 		public string CurrentAutobiographiesPath { get; set; }
 		public string CurrentFeedbackPath { get; set; }
 
-		private GmailManager currentGmailManager;
-
 		private Dictionary<string, Email> autobiographyEmails = new Dictionary<string, Email>();
 		private Dictionary<string, Email> feedbackEmails = new Dictionary<string, Email>();
+		private List<AutobiographyPairing> pairings = new List<AutobiographyPairing>();
 
-		public SelfKnowledgeManager(GmailManager gmailManager, string autobiographiesPath, string feedbackPath)
+		public SelfKnowledgeManager(string autobiographiesPath, string feedbackPath)
 		{
-			if (gmailManager == null || string.IsNullOrEmpty(autobiographiesPath) || string.IsNullOrEmpty(feedbackPath))
+			if (string.IsNullOrEmpty(autobiographiesPath) || string.IsNullOrEmpty(feedbackPath))
 				throw new Exception
 				(
 					Logger.FormatMessage
@@ -28,7 +38,6 @@ namespace Haraven.Autobiographies
 					)
 				);
 
-			currentGmailManager = gmailManager;
 			CurrentAutobiographiesPath = autobiographiesPath;
 			CurrentFeedbackPath = feedbackPath;
 
@@ -40,7 +49,7 @@ namespace Haraven.Autobiographies
 			try
 			{
 				Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Parsing all e-mails to get autobiographies and feedback messages...");
-				var allEmails = currentGmailManager.GetAllEmails(currentGmailManager.CheckForAttachment);
+				var allEmails = GmailManager.Instance.GetAllEmails(GmailManager.Instance.CheckForAttachment);
 
 				if ((allEmails?.Count ?? 0) == 0)
 				{
@@ -66,7 +75,7 @@ namespace Haraven.Autobiographies
 					{
 						if (!Directory.Exists(CurrentAutobiographiesPath))
 							Directory.CreateDirectory(CurrentAutobiographiesPath);
-						if (!currentGmailManager.SaveAttachment(newAutobiography, CurrentAutobiographiesPath))
+						if (!GmailManager.Instance.SaveAttachment(newAutobiography, CurrentAutobiographiesPath))
 						{
 							Logger.Log(Constants.Tags.SELF_KNOWLEDGE,
 								$"Failed to retrieve attachments for {newAutobiography}",
@@ -88,7 +97,7 @@ namespace Haraven.Autobiographies
 					{
 						if (!Directory.Exists(CurrentFeedbackPath))
 							Directory.CreateDirectory(CurrentFeedbackPath);
-						if (!currentGmailManager.SaveAttachment(newFeedback, CurrentFeedbackPath))
+						if (!GmailManager.Instance.SaveAttachment(newFeedback, CurrentFeedbackPath))
 						{
 							Logger.Log(Constants.Tags.SELF_KNOWLEDGE,
 								$"Failed to retrieve attachments for {newFeedback}",
@@ -103,10 +112,29 @@ namespace Haraven.Autobiographies
 						Logger.LogException(Constants.Tags.SELF_KNOWLEDGE, e);
 					}
 				}
+
+				SendAutobiographiesForFeedback(allNewAutobiographies);
+				SendFeedbackToBiographyAuthors(allNewFeedback);
 			}
 			catch (Exception e)
 			{
 				Logger.LogException(Constants.Tags.SELF_KNOWLEDGE, e);
+			}
+		}
+
+		private void SendAutobiographiesForFeedback(List<Email> newAutobiographies)
+		{
+			foreach (var newAutobiography in newAutobiographies)
+			{
+				var recipient = UserManager.Instance.Users.FirstOrDefault(u =>
+					!u.Equals(newAutobiography.Sender) && !pairings.Any(p => p.Recipient.Equals(u)));
+				if (recipient == null)
+				{
+					Logger.Log(Constants.Tags.SELF_KNOWLEDGE, $"Could not assign recipient for autobiography from {newAutobiography.Sender}", LogType.Error);
+					continue;
+				}
+
+
 			}
 		}
 

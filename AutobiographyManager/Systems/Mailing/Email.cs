@@ -1,4 +1,4 @@
-﻿using Google.Apis.Gmail.v1.Data;
+﻿using System;
 
 namespace Haraven.Autobiographies
 {
@@ -12,7 +12,8 @@ namespace Haraven.Autobiographies
 		public bool AreAttachmentsInitialized { get; set; }
 
 		public string MessageId { get; set; }
-		public string AttachmentFilename { get; set; }
+		public Guid AttachmentFileGuid { get; set; }
+		public string AttachmentExtension { get; set; }
 
 		public override string ToString()
 		{

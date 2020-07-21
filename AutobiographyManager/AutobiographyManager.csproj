@@ -80,6 +80,7 @@
     <Compile Include="Systems\Mailing\Gmail\GmailManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Systems\Users\UserManager.cs" />
     <Compile Include="Utils\Constants.cs" />
     <Compile Include="Core\Logging\Logger.cs" />
     <Compile Include="Utils\Paths.cs" />
@@ -91,13 +92,12 @@
     <None Include="Config\credentials.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Data\registered-users.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ATTACHMENT.ico" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Data\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
