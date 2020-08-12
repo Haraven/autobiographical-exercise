@@ -8,6 +8,9 @@ namespace Haraven.Autobiographies
 {
 	public class SelfKnowledgeManager
 	{
+		private static readonly string AUTOBIOGRAPHY_TEMPLATE_MESSAGE =
+			"Salut,</br></br>Ai atasata o autobiografie. Te rog sa o citesti si sa oferi feedback-ul folosindu-te de ghidul primit la inscriere.</br></br>Multumesc pentru participare!";
+
 		public class AutobiographyPairing
 		{
 			public string Sender { get; set; }
@@ -134,7 +137,27 @@ namespace Haraven.Autobiographies
 					continue;
 				}
 
-				GmailManager.Instance.SendAttachmentTo(recipient, newAutobiography, CurrentFeedbackPath);
+				Logger.Log(Constants.Tags.SELF_KNOWLEDGE, $"Sending autobiography from {newAutobiography.Sender} to {recipient}...");
+				GmailManager.Instance.SendAttachmentTo(recipient, newAutobiography, CurrentFeedbackPath, $"[{Constants.AUTOBIOGRAPHY_MAIL_TAG}]", AUTOBIOGRAPHY_TEMPLATE_MESSAGE);
+				pairings.Add(new AutobiographyPairing());
+				Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Sent email successfully");
+			}
+		}
+
+		private void SendAutobiographiesForFeedback(List<Email> newFeedbacks)
+		{
+			foreach (var newFeedback in newFeedbacks)
+			{
+
+				if (recipient == null)
+				{
+					Logger.Log(Constants.Tags.SELF_KNOWLEDGE, $"Could not assign recipient for autobiography from {newFeedback.Sender}", LogType.Error);
+					continue;
+				}
+
+				Logger.Log(Constants.Tags.SELF_KNOWLEDGE, $"Sending autobiography from {newFeedback.Sender} to {recipient}...");
+				GmailManager.Instance.SendAttachmentTo(recipient, newFeedback, CurrentFeedbackPath, $"[{Constants.AUTOBIOGRAPHY_MAIL_TAG}]", AUTOBIOGRAPHY_TEMPLATE_MESSAGE);
+				Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Sent email successfully");
 			}
 		}
 

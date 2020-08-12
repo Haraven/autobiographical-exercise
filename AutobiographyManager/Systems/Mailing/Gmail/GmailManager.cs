@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Mail;
 using System.Threading;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
+using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Services;
 using Google.Apis.Util.Store;
 using Haraven.Autobiographies.Utils;
+using MimeKit;
 
 namespace Haraven.Autobiographies
 {
@@ -196,7 +199,8 @@ namespace Haraven.Autobiographies
 			return true;
 		}
 
-		public bool SendAttachmentTo(string recipient, Email email, string attachmentRootPath)
+		public bool SendAttachmentTo(string recipient, Email email, string attachmentRootPath, string subject,
+			string body)
 		{
 			Logger.Log(Constants.Tags.GMAIL, $"Sending attachment to {recipient}");
 
@@ -206,9 +210,35 @@ namespace Haraven.Autobiographies
 				return false;
 			}
 
-			service.Users.Messages.Send()
+			try
+			{
+				var mail = new MailMessage
+				{
+					Subject = subject,
+					Body = body,
+					From = new MailAddress(Constants.GmailApi.DEFAULT_EMAIL),
+					IsBodyHtml = true
+				};
+				mail.Attachments.Add(new Attachment(attachmentRootPath));
+				mail.To.Add(new MailAddress(recipient));
+				var mimeMessage = MimeMessage.CreateFromMailMessage(mail);
 
-			Logger.Log(Constants.Tags.GMAIL, $"Sent attachment to {recipient}");
+				var message = new Message
+				{
+					Raw = StringUtils.Base64UrlEncode(mimeMessage.ToString())
+				};
+
+				service.Users.Messages.Send(message, Constants.GmailApi.CURRENT_USER).Execute();
+
+				Logger.Log(Constants.Tags.GMAIL, $"Sent attachment to {recipient}");
+
+				return true;
+			}
+			catch (Exception e)
+			{
+				Logger.LogException(Constants.Tags.GMAIL, e);
+				return false;
+			}
 		}
 	}
 }

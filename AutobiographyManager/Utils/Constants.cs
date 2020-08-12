@@ -10,9 +10,10 @@ namespace Haraven.Autobiographies.Utils
 
 		public static class GmailApi
 		{
-			public static readonly string[] SCOPES = {GmailService.Scope.GmailReadonly};
+			public static readonly string[] SCOPES = {GmailService.Scope.GmailReadonly, GmailService.Scope.GmailSend};
 			public const string APPLICATION_NAME = "AutobiographyManager";
 			public const string CURRENT_USER = "me";
+			public const string DEFAULT_EMAIL = "autobiografii.fpse.2020@gmail.com";
 		}
 
 		public static class Logging
