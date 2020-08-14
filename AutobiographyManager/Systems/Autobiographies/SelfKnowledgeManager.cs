@@ -78,7 +78,7 @@ namespace Haraven.Autobiographies
 					Logger.FormatMessage
 					(
 						Constants.Tags.SELF_KNOWLEDGE,
-						"Could not start self-knowledge manager. Check your initialization settings."
+						"Could not start self-knowledge manager. Check your initialization settings"
 					)
 				);
 
@@ -254,7 +254,7 @@ namespace Haraven.Autobiographies
 
 			File.WriteAllText(pairingDataFile, JsonConvert.SerializeObject(autobiographyPairings, Formatting.Indented));
 
-			Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Finished Flushing autobiography pairings");
+			Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Finished flushing autobiography pairings");
 		}
 
 		private void SendAutobiographiesForFeedback(List<Email> newAutobiographies)

@@ -67,7 +67,7 @@ namespace Haraven.Autobiographies
 					Logger.FormatMessage
 					(
 						Constants.Tags.GMAIL,
-						"Could not start Gmail manager. Check your initialization settings."
+						"Could not start Gmail manager. Check your initialization settings"
 					)
 				);
 
@@ -186,7 +186,7 @@ namespace Haraven.Autobiographies
 					}
 				}
 
-				Logger.Log(Constants.Tags.GMAIL, "Retrieved all e-mail messages.");
+				Logger.Log(Constants.Tags.GMAIL, "Retrieved all e-mail messages");
 				return emails;
 			}
 			catch (Exception e)
@@ -209,7 +209,7 @@ namespace Haraven.Autobiographies
 		{
 			if (email == null)
 			{
-				Logger.Log(Constants.Tags.GMAIL, "Attempted to check for attachments on a null e-mail.", LogType.Error);
+				Logger.Log(Constants.Tags.GMAIL, "Attempted to check for attachments on a null e-mail", LogType.Error);
 				return false;
 			}
 
@@ -257,7 +257,7 @@ namespace Haraven.Autobiographies
 
 			if (email == null)
 			{
-				Logger.Log(Constants.Tags.GMAIL, "Attempted to save the attachments of a null e-mail.", LogType.Error);
+				Logger.Log(Constants.Tags.GMAIL, "Attempted to save the attachments of a null e-mail", LogType.Error);
 				return false;
 			}
 
@@ -306,7 +306,7 @@ namespace Haraven.Autobiographies
 
 			if (email == null)
 			{
-				Logger.Log(Constants.Tags.GMAIL, "Attempted to send the attachments of a null e-mail.", LogType.Error);
+				Logger.Log(Constants.Tags.GMAIL, "Attempted to send the attachments of a null e-mail", LogType.Error);
 				return false;
 			}
 
