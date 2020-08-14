@@ -22,6 +22,7 @@ namespace Haraven.Autobiographies
 		/// </summary>
 		private const string AUTOBIOGRAPHY_TEMPLATE_MESSAGE =
 			"Salut, ai atasata o autobiografie. Te rog sa o citesti si sa oferi feedback-ul folosindu-te de ghidul primit la inscriere. Multumesc pentru participare!";
+
 		/// <summary>
 		/// The email body to use when sending feedback back to the autobiography author
 		/// </summary>
@@ -54,6 +55,7 @@ namespace Haraven.Autobiographies
 		/// The current path (from <see cref="AppDomain.CurrentDomain.BaseDirectory"/>) that autobiographies will be saved at
 		/// </summary>
 		public string CurrentAutobiographiesPath { get; set; }
+
 		/// <summary>
 		/// The current path (from <see cref="AppDomain.CurrentDomain.BaseDirectory"/>) that feedback will be saved at
 		/// </summary>
@@ -108,33 +110,37 @@ namespace Haraven.Autobiographies
 			{
 				Logger.Log(Constants.Tags.SELF_KNOWLEDGE,
 					"Parsing all emails to get autobiographies and feedback messages...");
-				var allEmails = GmailManager.Instance.GetAllEmails(GmailManager.Instance.CheckForAttachment);
+				var allEmails = GmailManager.Instance.GetAllEmails();
 
 				if ((allEmails?.Count ?? 0) == 0)
 				{
-					Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "No emails with attachments are available");
+					Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "No emails are available");
 					return;
 				}
 
 				Logger.Log(Constants.Tags.SELF_KNOWLEDGE,
 					$"Found {allEmails.Count} emails: [ {string.Join(", ", allEmails)} ]");
 
-				// new autobiography = the email hasn't already been paired and sent for feedback
-				var allNewAutobiographies = allEmails.Where(m =>
-					m.Title.ContainsCaseInsensitive(Constants.AUTOBIOGRAPHY_MAIL_TAG) &&
-					!autobiographyPairings.Any(p =>
-						p.AutobiographySender.Equals(m.Sender) && p.SentAutobiographyToRecipient)).ToList();
+				// new autobiography = the email sender is registered and the email hasn't already been paired and sent for feedback
+				var allNewAutobiographies = allEmails.Where(m => UserManager.Instance.Users.Contains(m.Sender) &&
+				                                                 m.Title.ContainsCaseInsensitive(Constants
+					                                                 .AUTOBIOGRAPHY_MAIL_TAG) &&
+				                                                 !autobiographyPairings.Any(p =>
+					                                                 p.AutobiographySender.Equals(m.Sender) &&
+					                                                 p.SentAutobiographyToRecipient)).ToList();
 
 				Logger.Log(Constants.Tags.SELF_KNOWLEDGE,
 					allNewAutobiographies.Count != 0
 						? $"Found {allNewAutobiographies.Count} new autobiograph{(allNewAutobiographies.Count == 1 ? "y" : "ies")}: [ {string.Join(", ", allNewAutobiographies)} ]"
 						: "Found no new autobiographies");
 
-				// new feedback = the email hasn't already been paired and sent back to the autobiography author
-				var allNewFeedback = allEmails.Where(m =>
-					m.Title.ContainsCaseInsensitive(Constants.FEEDBACK_MAIL_TAG) &&
-					!autobiographyPairings.Any(p =>
-						p.AutobiographyRecipient.Equals(m.Sender) && p.SentFeedbackToSender)).ToList();
+				// new feedback = the email sender is registered and the email hasn't already been paired and sent back to the autobiography author
+				var allNewFeedback = allEmails.Where(m => UserManager.Instance.Users.Contains(m.Sender) &&
+				                                          m.Title.ContainsCaseInsensitive(Constants
+					                                          .FEEDBACK_MAIL_TAG) &&
+				                                          !autobiographyPairings.Any(p =>
+					                                          p.AutobiographyRecipient.Equals(m.Sender) &&
+					                                          p.SentFeedbackToSender)).ToList();
 
 				Logger.Log(Constants.Tags.SELF_KNOWLEDGE,
 					allNewFeedback.Count != 0
