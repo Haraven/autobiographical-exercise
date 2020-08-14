@@ -15,6 +15,8 @@ namespace Haraven.Autobiographies
 			try
 			{
 				Logger.LogFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.Logging.OUTPUT_LOG_FILENAME);
+				if (File.Exists(Logger.LogFilePath))
+					File.Move(Logger.LogFilePath, Logger.LogFilePath + ".old");
 				Logger.NewLineFlushCount = Constants.Logging.NEW_LINE_FLUSH_COUNT;
 
 				var userManager = new UserManager(Paths.REGISTERED_USERS_PATH);
@@ -24,7 +26,7 @@ namespace Haraven.Autobiographies
 					cancellationTokenSource.Token);
 
 				var autobiographyManager =
-					new SelfKnowledgeManager(Paths.AUTOBIOGRAPHIES_PATH, Paths.FEEDBACK_PATH);
+					new SelfKnowledgeManager(Paths.AUTOBIOGRAPHIES_PATH, Paths.FEEDBACK_PATH, Paths.PAIRING_DATA_FILE);
 
 				TaskRepeater.Interval(TimeSpan.FromMinutes(1d), autobiographyManager.ParseAllMails,
 					cancellationTokenSource.Token);
