@@ -83,6 +83,17 @@ namespace Haraven.Autobiographies
 			Logger.Log(Constants.Tags.GMAIL, "Finished initializing.");
 		}
 
+		private static string FormatFromToEmail(string from)
+		{
+			if (string.IsNullOrEmpty(from)) return from;
+
+			var emailStartTagIndex = from.IndexOf('<');
+
+			if (emailStartTagIndex < 0) return from;
+
+			return from.Substring(emailStartTagIndex + 1, from.IndexOf('>') - emailStartTagIndex - 1);
+		}
+
 		public List<Email> GetAllEmails(Predicate<Email> predicate = null)
 		{
 			var emails = new List<Email>();
@@ -104,12 +115,16 @@ namespace Haraven.Autobiographies
 						var messageRequest =
 							service.Users.Messages.Get(Constants.GmailApi.CURRENT_USER, messageItem.Id);
 						var message = messageRequest.Execute();
+
+						var sender = FormatFromToEmail(message.Payload.Headers.FirstOrDefault(h => h.Name.ContainsCaseInsensitive("from"))?.Value ?? string.Empty);
+
+						if (sender?.Equals(Constants.GmailApi.DEFAULT_EMAIL) ?? false) continue;
+
 						var email = new Email
 						{
 							Title = message.Payload.Headers.FirstOrDefault(h =>
 								h.Name.ContainsCaseInsensitive("subject"))?.Value ?? string.Empty,
-							Sender = message.Payload.Headers.FirstOrDefault(h =>
-								h.Name.ContainsCaseInsensitive("from"))?.Value ?? string.Empty,
+							Sender = sender,
 							MessageId = messageItem.Id
 						};
 
@@ -167,7 +182,7 @@ namespace Haraven.Autobiographies
 
 		public bool SaveAttachment(Email email, string path)
 		{
-			Logger.Log(Constants.Tags.GMAIL, "Saving attachment of email");
+			Logger.Log(Constants.Tags.GMAIL, "Saving attachment of email...");
 
 			if (email == null)
 			{
@@ -219,7 +234,9 @@ namespace Haraven.Autobiographies
 					From = new MailAddress(Constants.GmailApi.DEFAULT_EMAIL),
 					IsBodyHtml = true
 				};
-				mail.Attachments.Add(new Attachment(attachmentRootPath));
+				var attachmentPath = Path.Combine(attachmentRootPath,
+					email.AttachmentFileGuid + "." + email.AttachmentExtension).Replace("/", "\\");
+				mail.Attachments.Add(new Attachment(attachmentPath));
 				mail.To.Add(new MailAddress(recipient));
 				var mimeMessage = MimeMessage.CreateFromMailMessage(mail);
 

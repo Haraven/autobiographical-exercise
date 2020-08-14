@@ -10,7 +10,7 @@ namespace Haraven.Autobiographies.Utils
 
 		public static class GmailApi
 		{
-			public static readonly string[] SCOPES = {GmailService.Scope.GmailReadonly, GmailService.Scope.GmailSend};
+			public static readonly string[] SCOPES = {GmailService.Scope.GmailModify};
 			public const string APPLICATION_NAME = "AutobiographyManager";
 			public const string CURRENT_USER = "me";
 			public const string DEFAULT_EMAIL = "autobiografii.fpse.2020@gmail.com";
@@ -22,6 +22,10 @@ namespace Haraven.Autobiographies.Utils
 			public static readonly Color INFO_COLOR = Color.DarkGray;
 			public static readonly Color ERROR_COLOR = Color.DarkRed;
 			public static readonly Color WARNING_COLOR = Color.DarkOrange;
+			public static readonly Color DETAILS_COLOR = Color.CadetBlue;
+
+			public const string OUTPUT_LOG_FILENAME = "output.log";
+			public const int NEW_LINE_FLUSH_COUNT = 5;
 		}
 
 		public static class Tags

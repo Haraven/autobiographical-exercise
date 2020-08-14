@@ -17,7 +17,7 @@ namespace Haraven.Autobiographies
 
 		public override string ToString()
 		{
-			return $"{{ from [ {Sender} ], titled {Title} }}";
+			return $"{{ from: {Sender}, Subject: {Title} }}";
 		}
 	}
 }

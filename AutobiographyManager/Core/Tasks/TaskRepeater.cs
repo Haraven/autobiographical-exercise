@@ -18,19 +18,15 @@ namespace Haraven.Autobiographies
 					Logger.Log(Constants.Tags.THREADING, "Starting task execution...", LogType.None);
 					while (true)
 					{
-						Logger.Log(Constants.Tags.THREADING,
-							"Executing repeated task action...".Pastel(Constants.Logging.THREAD_MESSAGE_COLOR), LogType.None);
+						Logger.Log(Constants.Tags.THREADING, "Executing repeated task action...", LogType.None);
 
 						action();
 
-						Logger.Log(Constants.Tags.THREADING,
-							"Executing repeated task action successfully.".Pastel(
-								Constants.Logging.THREAD_MESSAGE_COLOR), LogType.None);
+						Logger.Log(Constants.Tags.THREADING, "Executing repeated task action successfully.", LogType.None);
 
 						if (token.WaitCancellationRequested(pollInterval))
 						{
-							Logger.Log(Constants.Tags.THREADING,
-								"Exiting task...".Pastel(Constants.Logging.THREAD_MESSAGE_COLOR), LogType.None);
+							Logger.Log(Constants.Tags.THREADING, "Exiting task...", LogType.None);
 							break;
 						}
 					}

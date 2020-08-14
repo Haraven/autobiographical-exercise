@@ -22,9 +22,13 @@ namespace Haraven.Autobiographies
 		{
 			try
 			{
+				Logger.Log(Constants.Tags.USERS, $"Reading all registered users from {registeredUsersPath}...");
+
 				var content = File.ReadAllText(registeredUsersPath);
 
 				Users = JsonConvert.DeserializeObject<List<string>>(content);
+
+				Logger.Log(Constants.Tags.USERS, "Read all registered users successfully");
 			}
 			catch (Exception e)
 			{
