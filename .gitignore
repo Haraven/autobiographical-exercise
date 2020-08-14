@@ -356,4 +356,6 @@ MigrationBackup/
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio
 
+# Application-specific ignores
 AutobiographyManager/Config/
+AutobiographyManager/Data/registered-users.json
