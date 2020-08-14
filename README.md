@@ -18,7 +18,7 @@ There are validations and safety checks and logs done at just about every step o
 
 ## Adapting for your own usage
 - You will need to set up Gmail API credentials (see [this](https://developers.google.com/gmail/api/quickstart/dotnet)) first. Download the `credentials.json` file from the Cloud Platform project and put it under `AutobiographyManager/Config/credentials.json`. As specified in the reference, the file must **always** be copied to the output directory (click on file in _Solution Explorer -> Properties -> Copy to Output Directory_: set to `Copy always`)
-- You will need to change the application email under App.config.
+- You will need to change the application email under `App.config`.
 - You will need to create a `AutobiographyManager/Data/registered-users.json` file, which should contain a JSON list of strings denoting email addresses which can send and receive autobiographies and feedback. This file needs to always be copied to the output directory as well (see above).
 
 If you've set it up correctly, this is roughly what you'll be seeing in the console:
