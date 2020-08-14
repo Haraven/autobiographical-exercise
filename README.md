@@ -14,4 +14,11 @@ Once a user has written his or her feedback, it will be sent to the application 
 The application will check which autobiography author the feedback is paired to and will then send the feedback file to the author for his or her reading.
 
 ## Safeties
-There are validations and safety checks and logs done at just about every step of the way, so there is in theory no way to lose the data even if the application crashes, and debugging (should it be needed) should be more than easy to perform. Additionally, the received emails will never be deleted anyway, so even if the downloaded attachments and autobiography-feedback pairings are deleted, the documents themselves won't be lost.
+There are validations and safety checks and logs done at just about every step of the way, so there is in theory no way to lose the data even if the application crashes, and debugging (should it be needed) should be more than easy to perform. Additionally, the received emails will never be deleted anyway, so the documents themselves won't be lost. The downloaded attachments will however be deleted each time the application is launched, as they have either been already sent out or there was an error and they will be redownloaded anyway.
+
+## Adapting for your own usage
+- You will need to set up Gmail API credentials (see [this](https://developers.google.com/gmail/api/quickstart/dotnet)) first. Download the `credentials.json` file from the Cloud Platform project and put it under `AutobiographyManager/Config/credentials.json`. As specified in the reference, the file MUST always be copied to the output directory (click on file in _Solution Explorer -> Properties -> Copy to Output Directory_: set to `Copy always`)
+- You will need to change the application email under App.config.
+- You will need to create a `AutobiographyManager/Data/registered-users.json` file, which should contain a JSON list of strings denoting email addresses which can send and receive autobiographies and feedback. This file needs to always be copied to the output directory as well (see above).
+
+Any other changes you want to make will imply changes to the code, which is up to you to explore.
