@@ -34,9 +34,9 @@ namespace Haraven.Autobiographies
 
 				Logger.NewLineFlushCount = Constants.Logging.NEW_LINE_FLUSH_COUNT;
 
-				var userManager = new UserManager(Paths.REGISTERED_USERS_PATH);
+				var _ = new UserManager(Paths.REGISTERED_USERS_PATH);
 
-				var gmailManager = new GmailManager(Constants.GmailApi.SCOPES, Constants.GmailApi.APPLICATION_NAME,
+				var __ = new GmailManager(Constants.GmailApi.SCOPES, Constants.GmailApi.APPLICATION_NAME,
 					Constants.GmailApi.CURRENT_USER, Paths.GMAIL_CREDENTIALS_PATH, Paths.GMAIL_TOKEN_PATH,
 					cancellationTokenSource.Token);
 
