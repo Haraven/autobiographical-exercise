@@ -12,5 +12,6 @@
 
 		public const string DATA_ROOT_PATH = "data/";
 		public const string REGISTERED_USERS_PATH = DATA_ROOT_PATH + "registered-users.json";
+		public const string PAIRING_DATA_FILE = DATA_ROOT_PATH + "pairings.json";
 	}
 }

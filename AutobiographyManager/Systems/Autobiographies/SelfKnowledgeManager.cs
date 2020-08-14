@@ -4,35 +4,32 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Haraven.Autobiographies.Utils;
+using Newtonsoft.Json;
 
 namespace Haraven.Autobiographies
 {
 	public class SelfKnowledgeManager
 	{
-		private static readonly string AUTOBIOGRAPHY_TEMPLATE_MESSAGE =
+		private const string AUTOBIOGRAPHY_TEMPLATE_MESSAGE =
 			"Salut, ai atasata o autobiografie. Te rog sa o citesti si sa oferi feedback-ul folosindu-te de ghidul primit la inscriere. Multumesc pentru participare!";
 
-		private static readonly string FEEDBACK_TEMPLATE_MESSAGE =
+		private const string FEEDBACK_TEMPLATE_MESSAGE =
 			"Salut, ai atasat acestui mail feedback-ul la autobiografia trimisa de tine. Sper sa-ti fie util! ";
 
 		public class AutobiographyPairing
 		{
 			public string AutobiographySender { get; set; }
-			public string SenderAutobiographyGuid { get; set; }
 			public string AutobiographyRecipient { get; set; }
-			public string RecipientFeedbackGuid { get; set; }
 
 			public bool SentAutobiographyToRecipient { get; set; }
 			public bool SentFeedbackToSender { get; set; }
 
-			public AutobiographyPairing(string autobiographySender, string senderAutobiographyGuid,
-				string autobiographyRecipient, string recipientFeedbackGuid, bool sentAutobiographyToRecipient,
+			public AutobiographyPairing(string autobiographySender,
+				string autobiographyRecipient, bool sentAutobiographyToRecipient,
 				bool sentFeedbackToSender)
 			{
 				AutobiographySender = autobiographySender;
-				SenderAutobiographyGuid = senderAutobiographyGuid;
 				AutobiographyRecipient = autobiographyRecipient;
-				RecipientFeedbackGuid = recipientFeedbackGuid;
 				SentAutobiographyToRecipient = sentAutobiographyToRecipient;
 				SentFeedbackToSender = sentFeedbackToSender;
 			}
@@ -41,11 +38,12 @@ namespace Haraven.Autobiographies
 		public string CurrentAutobiographiesPath { get; set; }
 		public string CurrentFeedbackPath { get; set; }
 
-		private Dictionary<string, Email> autobiographyEmails = new Dictionary<string, Email>();
-		private Dictionary<string, Email> feedbackEmails = new Dictionary<string, Email>();
-		private List<AutobiographyPairing> pairings = new List<AutobiographyPairing>();
+		private readonly Dictionary<string, Email> autobiographyEmails = new Dictionary<string, Email>();
+		private readonly Dictionary<string, Email> feedbackEmails = new Dictionary<string, Email>();
+		private List<AutobiographyPairing> autobiographyPairings = new List<AutobiographyPairing>();
+		private readonly string pairingDataFile;
 
-		public SelfKnowledgeManager(string autobiographiesPath, string feedbackPath)
+		public SelfKnowledgeManager(string autobiographiesPath, string feedbackPath, string pairingFile)
 		{
 			if (string.IsNullOrEmpty(autobiographiesPath) || string.IsNullOrEmpty(feedbackPath))
 				throw new Exception
@@ -56,6 +54,10 @@ namespace Haraven.Autobiographies
 						"Could not start self-knowledge manager. Check your initialization settings."
 					)
 				);
+
+			pairingDataFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, pairingFile);
+
+			LoadPairings();
 
 			CurrentAutobiographiesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, autobiographiesPath);
 			CurrentFeedbackPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, feedbackPath);
@@ -83,7 +85,8 @@ namespace Haraven.Autobiographies
 
 				var allNewAutobiographies = allEmails.Where(m =>
 					m.Title.ContainsCaseInsensitive(Constants.AUTOBIOGRAPHY_MAIL_TAG) &&
-					!autobiographyEmails.ContainsKey(m.Sender)).ToList();
+					!autobiographyEmails.ContainsKey(m.Sender) && !autobiographyPairings.Any(p =>
+						p.AutobiographySender.Equals(m.Sender) && p.SentAutobiographyToRecipient)).ToList();
 
 				Logger.Log(Constants.Tags.SELF_KNOWLEDGE,
 					allNewAutobiographies.Count != 0
@@ -92,7 +95,8 @@ namespace Haraven.Autobiographies
 
 				var allNewFeedback = allEmails.Where(m =>
 					m.Title.ContainsCaseInsensitive(Constants.FEEDBACK_MAIL_TAG) &&
-					!feedbackEmails.ContainsKey(m.Sender)).ToList();
+					!feedbackEmails.ContainsKey(m.Sender) && !autobiographyPairings.Any(p =>
+						p.AutobiographyRecipient.Equals(m.Sender) && p.SentFeedbackToSender)).ToList();
 
 				Logger.Log(Constants.Tags.SELF_KNOWLEDGE,
 					allNewFeedback.Count != 0
@@ -147,19 +151,37 @@ namespace Haraven.Autobiographies
 					}
 				}
 
-				if (allNewAutobiographies.Count > 0)
+				try
 				{
-					Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Sending autobiographies for feedback...");
-					SendAutobiographiesForFeedback(allNewAutobiographies);
-					Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Finished sending autobiographies");
+					if (allNewAutobiographies.Count > 0)
+					{
+						Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Sending autobiographies for feedback...");
+						SendAutobiographiesForFeedback(allNewAutobiographies);
+						Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Finished sending autobiographies");
+					}
+				}
+				catch (Exception e)
+				{
+					Logger.LogException(Constants.Tags.SELF_KNOWLEDGE, e);
 				}
 
-				if (allNewFeedback.Count > 0)
+				try
 				{
-					Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Sending feedback back to autobiography authors...");
-					SendFeedbackToBiographyAuthors(allNewFeedback);
-					Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Finished sending feedback");
+					if (allNewFeedback.Count > 0)
+					{
+						Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Sending feedback back to autobiography authors...");
+						SendFeedbackToBiographyAuthors(allNewFeedback);
+						Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Finished sending feedback");
+					}
 				}
+				catch (Exception e)
+				{
+					Logger.LogException(Constants.Tags.SELF_KNOWLEDGE, e);
+				}
+
+				Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Flushing autobiography pairings to disk...");
+				FlushPairings();
+				Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Finished Flushing autobiography pairings");
 			}
 			catch (Exception e)
 			{
@@ -167,12 +189,34 @@ namespace Haraven.Autobiographies
 			}
 		}
 
+
+		private void LoadPairings()
+		{
+			if (!File.Exists(pairingDataFile)) return;
+
+			Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Loading autobiography pairings from disk...");
+			var pairingFileContents = File.ReadAllText(pairingDataFile);
+
+			autobiographyPairings = JsonConvert.DeserializeObject<List<AutobiographyPairing>>(pairingFileContents);
+
+			Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Loaded autobiography pairings successfully");
+		}
+
+		private void FlushPairings()
+		{
+			if (autobiographyPairings.Count == 0) return;
+
+			File.WriteAllText(pairingDataFile, JsonConvert.SerializeObject(autobiographyPairings, Formatting.Indented));
+		}
+
 		private void SendAutobiographiesForFeedback(List<Email> newAutobiographies)
 		{
 			foreach (var newAutobiography in newAutobiographies)
 			{
 				var recipient = UserManager.Instance.Users.FirstOrDefault(u =>
-					!u.Equals(newAutobiography.Sender) && !pairings.Any(p => p.AutobiographyRecipient.Equals(u)));
+					!u.Equals(newAutobiography.Sender) &&
+					!autobiographyPairings.Any(
+						p => p.AutobiographyRecipient.Equals(u) && p.SentAutobiographyToRecipient));
 				if (recipient == null)
 				{
 					Logger.Log(Constants.Tags.SELF_KNOWLEDGE,
@@ -185,8 +229,8 @@ namespace Haraven.Autobiographies
 				GmailManager.Instance.SendAttachmentTo(recipient, newAutobiography, CurrentAutobiographiesPath,
 					$"{CultureInfo.InvariantCulture.TextInfo.ToTitleCase(Constants.AUTOBIOGRAPHY_MAIL_TAG)} pentru feedback",
 					AUTOBIOGRAPHY_TEMPLATE_MESSAGE);
-				pairings.Add(new AutobiographyPairing(newAutobiography.Sender,
-					newAutobiography.AttachmentFileGuid.ToString(), recipient, null, true, false));
+
+				autobiographyPairings.Add(new AutobiographyPairing(newAutobiography.Sender, recipient, true, false));
 				Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Sent email successfully");
 			}
 		}
@@ -196,20 +240,12 @@ namespace Haraven.Autobiographies
 			foreach (var feedback in newFeedback)
 			{
 				var pairedAutobiography =
-					pairings.FirstOrDefault(p => p.AutobiographyRecipient.Equals(feedback.Sender));
+					autobiographyPairings.FirstOrDefault(p => p.AutobiographyRecipient.Equals(feedback.Sender));
 
 				if (pairedAutobiography == null)
 				{
 					Logger.Log(Constants.Tags.SELF_KNOWLEDGE,
 						$"Could not send feedback from {feedback.Sender} because no pairing to an autobiography was found. Skipping...",
-						LogType.Error);
-					continue;
-				}
-
-				if (pairedAutobiography.SentFeedbackToSender)
-				{
-					Logger.Log(Constants.Tags.SELF_KNOWLEDGE,
-						$"Could not send feedback from {feedback.Sender} because feedback was already sent. Skipping...",
 						LogType.Error);
 					continue;
 				}
@@ -220,7 +256,9 @@ namespace Haraven.Autobiographies
 					CurrentFeedbackPath,
 					$"{CultureInfo.InvariantCulture.TextInfo.ToTitleCase(Constants.FEEDBACK_MAIL_TAG)} la autobiografie",
 					FEEDBACK_TEMPLATE_MESSAGE);
-				Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Sent email successfully");
+
+				pairedAutobiography.SentFeedbackToSender = true;
+				Logger.Log(Constants.Tags.SELF_KNOWLEDGE, "Sent feedback successfully");
 			}
 		}
 	}
