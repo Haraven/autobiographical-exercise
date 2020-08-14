@@ -106,14 +106,14 @@ namespace Haraven.Autobiographies
 		/// <returns></returns>
 		public static string FormatMessage(string tag, string message, LogType logType = LogType.None)
 		{
-			var formattedMessage = $"[ {DateTime.Now.ToString(CultureInfo.InvariantCulture).Pastel(Constants.Logging.DETAILS_COLOR)} ] [ {tag.Pastel(Constants.Logging.DETAILS_COLOR)} ]: {message}";
+			var formattedMessage = $"[{DateTime.Now.ToString(CultureInfo.InvariantCulture).Pastel(Constants.Logging.DETAILS_COLOR)}] [{tag.Pastel(Constants.Logging.DETAILS_COLOR)}]: {message}";
 
 			return logType == LogType.None ? formattedMessage : formattedMessage.Pastel(GetColorFor(logType));
 		}
 
 		private static string FormatMessageNoColors(string tag, string message)
 		{
-			return $"[ {DateTime.Now.ToString(CultureInfo.InvariantCulture)} ] [ {tag} ]: {message}";
+			return $"[{DateTime.Now.ToString(CultureInfo.InvariantCulture)}] [{tag}]: {message}";
 		}
 
 		private static Color GetColorFor(LogType logType)
