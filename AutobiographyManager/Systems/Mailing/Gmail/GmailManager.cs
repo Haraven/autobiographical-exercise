@@ -143,8 +143,10 @@ namespace Haraven.Autobiographies
 
 			try
 			{
+				// create a request to retrieve the user's messages
 				var request = service.Users.Messages.List(CurrentUser);
 
+				// execute message listing request
 				var messages = request.Execute().Messages;
 				if ((messages?.Count ?? 0) == 0) return emails;
 
@@ -152,15 +154,19 @@ namespace Haraven.Autobiographies
 				{
 					try
 					{
+						// create a request to retrieve a single user message
 						var messageRequest =
 							service.Users.Messages.Get(CurrentUser, messageItem.Id);
+						// execute message retrieval request
 						var message = messageRequest.Execute();
 
+						// get the formatted sender email from the message headers
 						var sender =
 							FormatFromToEmail(message.Payload.Headers
 								                  .FirstOrDefault(h => h.Name.ContainsCaseInsensitive("from"))?.Value ??
 							                  string.Empty);
 
+						// no sender email = email is ignored
 						if (sender?.Equals(Constants.GmailApi.DEFAULT_EMAIL) ?? false) continue;
 
 						var email = new Email
@@ -190,6 +196,14 @@ namespace Haraven.Autobiographies
 			return emails;
 		}
 
+		/// <summary>
+		/// Checks whether the email has an attachment.
+		/// If it does, the email attachment fields (<see cref="Email.AttachmentId"/> && <see cref="Email.AttachmentExtension"/>) will be initialized.
+		///
+		/// <para>IMPORTANT: Only the first attachment will be taken into account</para>
+		/// </summary>
+		/// <param name="email"></param>
+		/// <returns></returns>
 		public bool CheckForAttachment(Email email)
 		{
 			if (email == null)
@@ -200,16 +214,22 @@ namespace Haraven.Autobiographies
 
 			try
 			{
+				// create message retrieval request
 				var messageRequest =
 					service.Users.Messages.Get(Constants.GmailApi.CURRENT_USER, email.MessageId);
 
+				// retrieve message parts upon retrieving the message
 				var parts = messageRequest.Execute().Payload.Parts;
 				foreach (var messagePart in parts)
 				{
+					// if the part has no filename, then it has no attachment
 					if (string.IsNullOrEmpty(messagePart.Filename)) continue;
 
+					// the email attachment name will be overridden, so the file extension needs to be saved
 					email.AttachmentExtension =
 						messagePart.Filename.Substring(messagePart.Filename.LastIndexOf('.') + 1);
+
+					// the id of the attachment that can be retrieved for the email
 					email.AttachmentId = messagePart.Body.AttachmentId;
 					return true;
 				}
@@ -222,6 +242,14 @@ namespace Haraven.Autobiographies
 			return false;
 		}
 
+		/// <summary>
+		/// Saves the attachment corresponding to an email at the given path.
+		///
+		/// <para>Must have set the email's attachment ID and file extension (see <see cref="CheckForAttachment"/>)</para>
+		/// </summary>
+		/// <param name="email">the email to download the attachment for</param>
+		/// <param name="path">the path to save the attachment at</param>
+		/// <returns>true if the attachment was downloaded successfully, false otherwise</returns>
 		public bool SaveAttachment(Email email, string path)
 		{
 			Logger.Log(Constants.Tags.GMAIL, "Saving attachment of email...");
@@ -239,23 +267,37 @@ namespace Haraven.Autobiographies
 				return false;
 			}
 
+			// get the part of the message that corresponds to the attachment
 			var attachmentPart = service.Users.Messages.Attachments
 				.Get(Constants.GmailApi.CURRENT_USER, email.MessageId, email.AttachmentId)
 				.Execute();
 
-			// Converting from RFC 4648 base64 to base64url encoding
+			// convert from RFC 4648 base64 to base64url encoding
 			// see http://en.wikipedia.org/wiki/Base64#Implementations_and_history
 			var attachmentData = attachmentPart.Data.Replace('-', '+').Replace('_', '/');
 			var data = Convert.FromBase64String(attachmentData);
 
+			// save the attachment to disk
 			email.AttachmentFileGuid = Guid.NewGuid();
 			var filePath = Path.Combine(path, email.AttachmentFileGuid + "." + email.AttachmentExtension);
 			File.WriteAllBytes(filePath, data);
+
 			Logger.Log(Constants.Tags.GMAIL, $"Saved attachment at \"{filePath}\"");
 
 			return true;
 		}
 
+		/// <summary>
+		/// Sends the attachment associated with the email (at the given root path) to a recipient,
+		/// with an email subject and body
+		/// </summary>
+		/// <param name="recipient">the email to send the attachment to</param>
+		/// <param name="email">the email which has attachments (the attachment ID and the
+		/// file extension must have been initialized and the file must have been downloaded beforehand - see <see cref="CheckForAttachment"/>, <see cref="SaveAttachment"/></param>
+		/// <param name="attachmentRootPath">the root folder that the downloaded attachment is stored at</param>
+		/// <param name="subject">the message subject</param>
+		/// <param name="body">the message body</param>
+		/// <returns>true if the attachment was successfully sent, false otherwise</returns>
 		public bool SendAttachmentTo(string recipient, Email email, string attachmentRootPath, string subject,
 			string body)
 		{
@@ -269,6 +311,7 @@ namespace Haraven.Autobiographies
 
 			try
 			{
+				// using System.Net.Mail & MimeKit to create the email message
 				var mail = new MailMessage
 				{
 					Subject = subject,
@@ -282,11 +325,13 @@ namespace Haraven.Autobiographies
 				mail.To.Add(new MailAddress(recipient));
 				var mimeMessage = MimeMessage.CreateFromMailMessage(mail);
 
+				// need to encode the mime message to base 64 so that it can be sent as an email
 				var message = new Message
 				{
 					Raw = StringUtils.Base64UrlEncode(mimeMessage.ToString())
 				};
 
+				// perform the message send request using the Gmail API
 				service.Users.Messages.Send(message, Constants.GmailApi.CURRENT_USER).Execute();
 
 				Logger.Log(Constants.Tags.GMAIL, $"Sent attachment to {recipient}");
