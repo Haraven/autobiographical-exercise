@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net.Mail;
@@ -167,7 +168,7 @@ namespace Haraven.Autobiographies
 							                  string.Empty);
 
 						// no sender email = email is ignored
-						if (sender?.Equals(Constants.GmailApi.DEFAULT_EMAIL) ?? false) continue;
+						if (sender?.Equals(ConfigurationManager.AppSettings[Constants.GmailApi.APPLICATION_EMAIL_CONFIG_FIELD]) ?? false) continue;
 
 						var email = new Email
 						{
@@ -260,7 +261,7 @@ namespace Haraven.Autobiographies
 				return false;
 			}
 
-			if (!string.IsNullOrEmpty(email.AttachmentId) && !CheckForAttachment(email))
+			if (string.IsNullOrEmpty(email.AttachmentId) && !CheckForAttachment(email))
 			{
 				Logger.Log(Constants.Tags.GMAIL,
 					$"{email} has no attachments to save.", LogType.Warning);
@@ -316,7 +317,7 @@ namespace Haraven.Autobiographies
 				{
 					Subject = subject,
 					Body = body,
-					From = new MailAddress(Constants.GmailApi.DEFAULT_EMAIL),
+					From = new MailAddress(ConfigurationManager.AppSettings[Constants.GmailApi.APPLICATION_EMAIL_CONFIG_FIELD]),
 					IsBodyHtml = true
 				};
 				var attachmentPath = Path.Combine(attachmentRootPath,

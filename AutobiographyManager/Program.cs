@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Configuration;
 using System.IO;
+using System.Runtime.Remoting.Messaging;
 using System.Threading;
 using Haraven.Autobiographies.Utils;
 
@@ -9,6 +11,12 @@ namespace Haraven.Autobiographies
 	{
 		private static void Main()
 		{
+			if (!Validate())
+			{
+				Console.WriteLine("Cannot launch application. Please make sure it is configured properly (read README.md)");
+				return;
+			}
+
 			// used to kill the mail-checking thread when exiting
 			var cancellationTokenSource = new CancellationTokenSource();
 			try
@@ -57,6 +65,12 @@ namespace Haraven.Autobiographies
 			}
 
 			cancellationTokenSource.Cancel();
+		}
+
+		private static bool Validate()
+		{
+			return !string.IsNullOrEmpty(
+				ConfigurationManager.AppSettings.Get(Constants.GmailApi.APPLICATION_EMAIL_CONFIG_FIELD));
 		}
 	}
 }

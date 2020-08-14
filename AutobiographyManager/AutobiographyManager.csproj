@@ -67,6 +67,7 @@
       <HintPath>..\packages\Pastel.1.3.2\lib\netstandard2.0\Pastel.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Security" />

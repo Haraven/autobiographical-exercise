@@ -14,7 +14,7 @@ namespace Haraven.Autobiographies.Utils
 			public static readonly string[] SCOPES = {GmailService.Scope.GmailModify};
 			public const string APPLICATION_NAME = "AutobiographyManager";
 			public const string CURRENT_USER = "me";
-			public const string DEFAULT_EMAIL = "autobiografii.fpse.2020@gmail.com";
+			public const string APPLICATION_EMAIL_CONFIG_FIELD = "applicationEmail";
 		}
 
 		public static class Logging
