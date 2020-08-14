@@ -30,6 +30,7 @@ namespace Haraven.Autobiographies
 		/// </summary>
 		public static int NewLineFlushCount { get; set; } = 1;
 
+		// ReSharper disable once InconsistentNaming
 		private static readonly List<string> loggedLines = new List<string>();
 
 		public static void Log(string tag, string message, LogType logType = LogType.Info)
@@ -86,6 +87,7 @@ namespace Haraven.Autobiographies
 					return Constants.Logging.WARNING_COLOR;
 				case LogType.Error:
 					return Constants.Logging.ERROR_COLOR;
+				// ReSharper disable once RedundantCaseLabel
 				case LogType.None:
 					// cascades
 				default:
