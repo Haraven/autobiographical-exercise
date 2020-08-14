@@ -3,14 +3,14 @@
 Basic console-based e-mail reader application, used in conjunction with some [writing guidelines](https://docs.google.com/document/d/18doylw8PJhlrARf5Pvpo_ae5FfNPjlZqvVm_UAUXfQU/edit?usp=sharing) I set up for an autobiographical exercise at my university.
 
 ## Autobiographies
-Students will be writing anonymous autobiographies, which they will then attach to messages (as pdfs or some other format), sent with a specified keyword in the title, to the application email. 
+Students will be writing anonymous autobiographies, which they will then attach to messages (as pdfs or some other format), sent with a specified keyword (i.e. 'autobiografie') in the title, to the application email. 
 The application will retrieve the autobiographies regularly and will send the new ones over to random *registered* email addresses for reading and receiving feedback.
 Each autobiography will only be sent once and to an email which hasn't received an autobiography already. 
 Once an author has sent his work, subsequent autobiographies will be ignored from him or her.
 
 ## Feedback for autobiographies
 On the other end of things, registered emails will be receiving random, anonymous autobiographies that they have to read and then send feedback for, using the guidelines mentioned earlier.
-Once a user has written his or her feedback, it will be sent to the application email with a specified keyword in the title.
+Once a user has written his or her feedback, it will be sent to the application email with a specified keyword (i.e. 'feedback') in the title.
 The application will check which autobiography author the feedback is paired to and will then send the feedback file to the author for his or her reading.
 
 ## Safeties
