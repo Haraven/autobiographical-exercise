@@ -14,13 +14,31 @@ using MimeKit;
 
 namespace Haraven.Autobiographies
 {
+	/// <summary>
+	/// Manager for all gmail-related actions (reading the inbox, sending emails, etc.)
+	/// </summary>
 	public class GmailManager
 	{
+		/// <summary>
+		/// The current <see cref="GmailManager"/> instance.
+		/// </summary>
 		public static GmailManager Instance { get; private set; }
 
+		/// <summary>
+		/// The path to retrieve the Gmail authentication credentials from
+		/// </summary>
 		public string CredentialPath { get; }
+		/// <summary>
+		/// The path to store the authentication token at after the first login
+		/// </summary>
 		public string TokenPath { get; }
+		/// <summary>
+		/// The name of the Google application that will use Gmail
+		/// </summary>
 		public string ApplicationName { get; }
+		/// <summary>
+		/// The name of the current user that will have his inbox manipulated
+		/// </summary>
 		public string CurrentUser { get; }
 
 		private string[] emailScopes;
@@ -29,6 +47,15 @@ namespace Haraven.Autobiographies
 
 		private GmailService service;
 
+		/// <summary>
+		/// Initializes the manager.
+		/// </summary>
+		/// <param name="scopes">the Gmail API scopes (see <see cref="GmailService.Scope"/>)</param>
+		/// <param name="applicationName">the name of the application that will use Gmail</param>
+		/// <param name="currentUser">the name of the user who will use Gmail</param>
+		/// <param name="credentialPath">the path to retrieve the API authentication credentials from</param>
+		/// <param name="tokenPath">the path to save the authentication token at</param>
+		/// <param name="token">the cancellation token to be used when the user wants to exit the application</param>
 		public GmailManager(string[] scopes, string applicationName, string currentUser, string credentialPath,
 			string tokenPath, CancellationToken token)
 		{
@@ -83,6 +110,13 @@ namespace Haraven.Autobiographies
 			Logger.Log(Constants.Tags.GMAIL, "Finished initializing.");
 		}
 
+		/// <summary>
+		/// Removes the formatting from the "from" header
+		/// (Gmail emails' "from" header have a structure similar to:
+		/// John Doe &lt;john.doe@johndoe.com&gt;)
+		/// </summary>
+		/// <param name="from"></param>
+		/// <returns></returns>
 		private static string FormatFromToEmail(string from)
 		{
 			if (string.IsNullOrEmpty(from)) return from;
@@ -94,7 +128,14 @@ namespace Haraven.Autobiographies
 			return from.Substring(emailStartTagIndex + 1, from.IndexOf('>') - emailStartTagIndex - 1);
 		}
 
-		public List<Email> GetAllEmails(Predicate<Email> predicate = null)
+		/// <summary>
+		/// Retrieves all emails for the user.
+		///
+		/// <para>WARNING: This retrieves ALL inbox emails,
+		/// including send emails and the likes</para>
+		/// </summary>
+		/// <returns></returns>
+		public List<Email> GetAllEmails()
 		{
 			var emails = new List<Email>();
 
@@ -102,8 +143,7 @@ namespace Haraven.Autobiographies
 
 			try
 			{
-				var request = service.Users.Messages.List(Constants.GmailApi.CURRENT_USER);
-
+				var request = service.Users.Messages.List(CurrentUser);
 
 				var messages = request.Execute().Messages;
 				if ((messages?.Count ?? 0) == 0) return emails;
@@ -113,10 +153,13 @@ namespace Haraven.Autobiographies
 					try
 					{
 						var messageRequest =
-							service.Users.Messages.Get(Constants.GmailApi.CURRENT_USER, messageItem.Id);
+							service.Users.Messages.Get(CurrentUser, messageItem.Id);
 						var message = messageRequest.Execute();
 
-						var sender = FormatFromToEmail(message.Payload.Headers.FirstOrDefault(h => h.Name.ContainsCaseInsensitive("from"))?.Value ?? string.Empty);
+						var sender =
+							FormatFromToEmail(message.Payload.Headers
+								                  .FirstOrDefault(h => h.Name.ContainsCaseInsensitive("from"))?.Value ??
+							                  string.Empty);
 
 						if (sender?.Equals(Constants.GmailApi.DEFAULT_EMAIL) ?? false) continue;
 
@@ -168,7 +211,6 @@ namespace Haraven.Autobiographies
 					email.AttachmentExtension =
 						messagePart.Filename.Substring(messagePart.Filename.LastIndexOf('.') + 1);
 					email.AttachmentId = messagePart.Body.AttachmentId;
-					email.AreAttachmentsInitialized = true;
 					return true;
 				}
 			}
@@ -190,7 +232,7 @@ namespace Haraven.Autobiographies
 				return false;
 			}
 
-			if (!email.AreAttachmentsInitialized && !CheckForAttachment(email))
+			if (!string.IsNullOrEmpty(email.AttachmentId) && !CheckForAttachment(email))
 			{
 				Logger.Log(Constants.Tags.GMAIL,
 					$"{email} has no attachments to save.", LogType.Warning);
@@ -209,7 +251,7 @@ namespace Haraven.Autobiographies
 			email.AttachmentFileGuid = Guid.NewGuid();
 			var filePath = Path.Combine(path, email.AttachmentFileGuid + "." + email.AttachmentExtension);
 			File.WriteAllBytes(filePath, data);
-			Logger.Log(Constants.Tags.GMAIL, $"Saved attachment at {filePath}");
+			Logger.Log(Constants.Tags.GMAIL, $"Saved attachment at \"{filePath}\"");
 
 			return true;
 		}

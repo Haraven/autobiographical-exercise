@@ -7,6 +7,7 @@ namespace Haraven.Autobiographies.Utils
 	{
 		public const string AUTOBIOGRAPHY_MAIL_TAG = "autobiografie";
 		public const string FEEDBACK_MAIL_TAG = "feedback";
+		public const double EMAIL_CHECKING_INTERVAL = 1d;
 
 		public static class GmailApi
 		{

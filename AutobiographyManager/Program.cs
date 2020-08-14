@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Drawing;
 using System.IO;
 using System.Threading;
 using Haraven.Autobiographies.Utils;
-using Pastel;
 
 namespace Haraven.Autobiographies
 {
@@ -11,12 +9,29 @@ namespace Haraven.Autobiographies
 	{
 		private static void Main()
 		{
+			// used to kill the mail-checking thread when exiting
 			var cancellationTokenSource = new CancellationTokenSource();
 			try
 			{
-				Logger.LogFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.Logging.OUTPUT_LOG_FILENAME);
+				Logger.Log(Constants.Tags.SYSTEM,
+					Environment.NewLine + "===========================================================" +
+					Environment.NewLine +
+					"YOU MAY EXIT THIS APPLICATION AT ANY TIME BY PRESSING ENTER" + Environment.NewLine +
+					"===========================================================" + Environment.NewLine);
+
+				// also log the output to the designated output file, using the .exe directory as root
+				Logger.LogFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+					Constants.Logging.OUTPUT_LOG_FILENAME);
+
+				// rename old logfile (if it exists)
 				if (File.Exists(Logger.LogFilePath))
-					File.Move(Logger.LogFilePath, Logger.LogFilePath + ".old");
+				{
+					var oldLogfile = Logger.LogFilePath + ".old";
+					if (File.Exists(oldLogfile))
+						File.Delete(oldLogfile);
+					File.Move(Logger.LogFilePath, oldLogfile);
+				}
+
 				Logger.NewLineFlushCount = Constants.Logging.NEW_LINE_FLUSH_COUNT;
 
 				var userManager = new UserManager(Paths.REGISTERED_USERS_PATH);
@@ -28,10 +43,12 @@ namespace Haraven.Autobiographies
 				var autobiographyManager =
 					new SelfKnowledgeManager(Paths.AUTOBIOGRAPHIES_PATH, Paths.FEEDBACK_PATH, Paths.PAIRING_DATA_FILE);
 
-				TaskRepeater.Interval(TimeSpan.FromMinutes(1d), autobiographyManager.ParseAllMails,
+				// start a new thread that checks emails every few minutes, as dictated by Constants.EMAIL_CHECKING_INTERVAL
+				// allowing for cancellation at any point via the cancellation token
+				TaskRepeater.Interval(TimeSpan.FromMinutes(Constants.EMAIL_CHECKING_INTERVAL),
+					autobiographyManager.ParseAllMails,
 					cancellationTokenSource.Token);
 
-				Logger.Log(Constants.Tags.SYSTEM, "You may exit this application at any time by pressing Enter".PastelBg(Color.DarkRed));
 				Console.ReadLine();
 			}
 			catch (Exception e)
